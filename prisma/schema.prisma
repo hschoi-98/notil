@@ -1,0 +1,45 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  sections     Section[]
+
+  @@map("users")
+}
+
+model Section {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  name       String
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes      Note[]
+
+  @@map("sections")
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  sectionId   String   @map("section_id")
+  title       String
+  contentMd   String   @default("") @map("content_md") @db.Text
+  contentHtml String   @default("") @map("content_html") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
